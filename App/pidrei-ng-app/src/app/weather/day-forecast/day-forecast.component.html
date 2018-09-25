@@ -1,0 +1,46 @@
+<mat-card>
+  <mat-card-content>
+    <table>
+      <thead>
+        <tr>
+          <th colspan="3" style="text-align: center;">
+              <span style="font-size:14pt;">{{forecast.date | date: 'dd.MM.'}}</span><br />
+              {{getDay(forecast.date)}}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td width="33%" class="align-middle" style="text-align:center;vertical-align: top">
+            <mat-icon [svgIcon]="getIcon(forecast.morning, false)"></mat-icon>
+          </td>
+          <td width="33%" class="align-middle" style="text-align:center;">
+              <mat-icon [svgIcon]="getIcon(forecast.afternoon, false)"></mat-icon>
+            </td>
+          <td width="33%" class="align-middle" style="text-align:center;">
+              <mat-icon [svgIcon]="getIcon(forecast.night, true)"></mat-icon>
+            </td>
+        </tr>
+        <tr>
+          <td colspan="3">
+            <table width="100%" height="100%">
+              <tr>
+                <td width="50%" style="vertical-align: bottom"><span>max.</span><br /><span style="font-size:14pt; font-weight: bold;">{{forecast.maxTemperature | number: '.1-1'}}°C</span></td>
+                <td width="50%" rowspan="2">
+                  Wind: <span>aus {{getWindDirection(forecast.wind)}}, {{forecast.wind.speed|number}} km/h (Böen
+                  {{forecast.wind.maxSpeed|number}} km/h)</span><br />
+                  Regen: <span>{{forecast.expectedRain|number}} l/m²</span>
+                </td>
+              </tr>
+              <tr>
+                <td style="vertical-align: top;">
+                    <span>min.</span><br /><span style="font-size:14pt; font-weight: bold;">{{forecast.minTemperature | number: '.1-1'}}°C</span>  
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </mat-card-content>
+</mat-card>

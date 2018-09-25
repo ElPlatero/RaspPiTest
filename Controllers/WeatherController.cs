@@ -1,0 +1,24 @@
+﻿using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using RaspPiTest.Kachelmann;
+
+namespace RaspPiTest.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class WeatherController : ControllerBase
+    {
+        private readonly WeatherRepository _weatherRepository;
+
+        public WeatherController(WeatherRepository weatherRepository)
+        {
+            _weatherRepository = weatherRepository;
+        }
+
+        [HttpGet("forecast")]
+        public async Task<IActionResult> GetThreeDaysForecast()
+        {
+            return Ok(await _weatherRepository.FetchWeatherAsync());
+        }
+    }
+}

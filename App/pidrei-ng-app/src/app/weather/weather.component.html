@@ -1,0 +1,14 @@
+<div class="row">
+  <button mat-mini-fab class="invisible-focus" (click)="refreshForecast()">
+    <mat-icon>refresh</mat-icon>
+  </button>
+  <p *ngIf="forecast">
+    Zuletzt aktualisiert: {{clientFetch | date: 'dd.MM.yyyy HH:mm:ss'}} Uhr<br />
+    Stand der Wetterinfo: {{forecast.fetched | date: 'dd.MM.yyyy HH:mm:ss'}} Uhr
+  </p>
+</div>
+<div class="row" *ngIf="forecast">
+  <app-day-forecast [forecast]="forecast.today" class="col-lg-4 col-md-4 col-sm-4 col-xs-4 forecast"></app-day-forecast>
+  <app-day-forecast [forecast]="forecast.tommorrow" class="col-lg-4 col-md-4 col-sm-4 col-xs-4 forecast"></app-day-forecast>
+  <app-day-forecast [forecast]="forecast.dayAfterTommorrow" class="col-lg-4 col-md-4 col-sm-4 col-xs-4 forecast"></app-day-forecast>
+</div>

@@ -1,0 +1,16 @@
+mat-card {
+    min-width: 200px;
+}
+
+table span {
+    font-size:7pt;
+}
+mat-card-subtitle, mat-card-title {
+    text-align: center;
+}
+
+mat-icon {
+    font-size: 50px;
+    height: 50px;
+    width: 50px;
+}

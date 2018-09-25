@@ -1,0 +1,23 @@
+.plusminus {
+    display:inline-block;
+    border: 0;
+    height: 30px;
+    width: 35px;
+    font-weight: 300;
+    box-shadow: none;
+    font-size:20px;
+    line-height:20px;
+    font-weight:bolder;
+}
+
+.plusminus:focus {outline:0;}
+
+.colder {
+    background-color: #ff7070;
+	-moz-border-radius: 15px 0 0 15px; -webkit-border-radius: 15px 0 0 15px; border-radius: 15px 0 0 15px;
+}
+
+.warmer {
+    background-color: #7070ff;
+	-moz-border-radius: 0 15px 15px 0; -webkit-border-radius: 0 15px 15px 0; border-radius: 0 15px 15px 0;
+}
