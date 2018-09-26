@@ -13,7 +13,8 @@ obj/
 bin/
 publish/
 dist/
-
+.vs/
+.vscode/
 *.7z
 *.dmg
 *.gz
