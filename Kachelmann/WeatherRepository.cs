@@ -56,7 +56,7 @@ namespace RaspPiTest.Kachelmann
 
 
             using (var client = new HttpClient())
-            using (var stream = await client.GetStreamAsync(Uri))
+            using (var stream = await client.GetStreamAsync(uri))
             using (var reader = new StreamReader(stream))
             {
                 return reader.ReadToEnd();

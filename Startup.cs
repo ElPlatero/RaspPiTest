@@ -1,17 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Cors.Infrastructure;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.StaticFiles.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using RaspPiTest.FritzBox;
 using RaspPiTest.Kachelmann;
 
@@ -38,6 +29,9 @@ namespace RaspPiTest
                 builder.AllowAnyHeader();
                 builder.AllowAnyMethod();
             }));
+
+            var configuration = new ConfigurationBuilder().AddJsonFile("fritzbox-settings.json", true).Build();
+            services.Configure<FritzBoxConnection>(configuration.GetSection("connection"));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
