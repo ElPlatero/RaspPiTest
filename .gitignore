@@ -40,3 +40,4 @@ dist/
 ehthumbs.db
 Thumbs.db
 /fritzbox-settings.json
+/publish.ps1
