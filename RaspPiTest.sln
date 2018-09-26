@@ -5,8 +5,6 @@ VisualStudioVersion = 15.0.28010.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RaspPiTest", "RaspPiTest.csproj", "{45A73787-6BED-4A59-B37A-94EFC1E11C3D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RaspPiTest.Tests", "..\RaspPiTest.Tests\RaspPiTest.Tests.csproj", "{B66FC41A-6FD3-49D7-8945-53B3AD9E641E}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
