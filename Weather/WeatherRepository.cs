@@ -6,19 +6,26 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using Microsoft.Extensions.Options;
 
-namespace RaspPiTest.Kachelmann
+namespace RaspPiTest.Weather
 {
     public class WeatherRepository
     {
-        private const string WEATHER_ERFURT = @"https://kachelmannwetter.com/de/ajax_pub/weathernexthoursdays?city_id=2929670";
+        private const string WEATHER_API = @"https://kachelmannwetter.com/de/ajax_pub/weathernexthoursdays?city_id=";
         private WeatherFetch _currentFetch = new WeatherFetch { Fetched = DateTime.MinValue };
+        private readonly WeatherOptions _options;
+
+        public WeatherRepository(IOptions<WeatherOptions> options)
+        {
+            _options = options.Value;
+        }
 
         public async Task<WeatherFetch> FetchWeatherAsync()
         {
-            if ((DateTime.Now - _currentFetch.Fetched) <= TimeSpan.FromHours(2)) return _currentFetch;
+            if ((DateTime.Now - _currentFetch.Fetched) <= TimeSpan.FromMinutes(_options.RefreshInterval)) return _currentFetch;
             using (var client = new HttpClient())
-            using (var stream = await client.GetStreamAsync(WEATHER_ERFURT))
+            using (var stream = await client.GetStreamAsync($"{WEATHER_API}{_options.CityId}"))
             using (var reader = new StreamReader(stream))
             {
                 string line;
@@ -65,12 +72,16 @@ namespace RaspPiTest.Kachelmann
 
         private WeatherFetch ParseFetch(XDocument xDoc)
         {
-            var days = xDoc.Root.Descendants("div").Where(p => p.Attribute("class") != null && p.Attribute("class").Value == "col-xs-4  nextdays").ToArray();
-            var result = new WeatherFetch();
-            result.Today = ParseDay(days[0]);
-            result.Tommorrow = ParseDay(days[1]);
-            result.DayAfterTommorrow = ParseDay(days[2]);
-            result.Fetched = DateTime.Now;
+            if (xDoc?.Root == null) throw new ArgumentNullException(nameof(xDoc));
+
+            var days = xDoc.Root.Descendants("div").Where(p => p.Attribute("class")?.Value == "col-xs-4  nextdays").ToArray();
+            var result = new WeatherFetch
+            {
+                Today = ParseDay(days[0]),
+                Tommorrow = ParseDay(days[1]),
+                DayAfterTommorrow = ParseDay(days[2]),
+                Fetched = DateTime.Now
+            };
             return result;
         }
         private DayForecast ParseDay(XElement element)
@@ -81,14 +92,14 @@ namespace RaspPiTest.Kachelmann
             if(date < DateTime.Now && date.DayOfYear != DateTime.Now.DayOfYear) date = new DateTime(date.Year + 1, date.Month, date.Day);
             result.Date = date;
 
-            var sunshines = element.Descendants("img").Where(p => p.Parent != null && p.Parent.Attribute("title") != null && p.Parent.Attribute("title").Value.Contains(":")).Select(p =>
+            var sunshineInfos = element.Descendants("img").Where(p => p.Parent?.Attribute("title") != null && p.Parent.Attribute("title").Value.Contains(":")).Select(p =>
             {
                 var node = p.Parent.Attribute("title").Value.Split(':');
                 return new {TimeOfDay = node[0], Sunshine = GetSunshine(node[1].Trim())};
             }).ToList();
-            result.Morning = sunshines.First(p => p.TimeOfDay == "vormittags").Sunshine;
-            result.Afternoon = sunshines.First(p => p.TimeOfDay == "nachmittags").Sunshine;
-            result.Night = sunshines.First(p => p.TimeOfDay == "abends").Sunshine;
+            result.Morning = sunshineInfos.First(p => p.TimeOfDay == "vormittags").Sunshine;
+            result.Afternoon = sunshineInfos.First(p => p.TimeOfDay == "nachmittags").Sunshine;
+            result.Night = sunshineInfos.First(p => p.TimeOfDay == "abends").Sunshine;
 
             result.MinTemperature = float.Parse(element
                 .Descendants("div")

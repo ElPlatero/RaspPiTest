@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RaspPiTest.FritzBox;
-using RaspPiTest.Kachelmann;
+using RaspPiTest.Weather;
 
 namespace RaspPiTest
 {
@@ -30,7 +30,11 @@ namespace RaspPiTest
                 builder.AllowAnyMethod();
             }));
 
-            var configuration = new ConfigurationBuilder().AddJsonFile("fritzbox-settings.json", true).Build();
+            var configuration = new ConfigurationBuilder()
+                .AddJsonFile("appsettings.json", false)
+                .AddJsonFile("fritzbox-settings.json", true)
+                .Build();
+            services.Configure<WeatherOptions>(configuration.GetSection("weather"));
             services.Configure<FritzBoxConnection>(configuration.GetSection("connection"));
         }
 

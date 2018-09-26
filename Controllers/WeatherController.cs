@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using RaspPiTest.Kachelmann;
+using RaspPiTest.Weather;
 
 namespace RaspPiTest.Controllers
 {
