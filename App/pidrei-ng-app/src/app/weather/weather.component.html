@@ -1,11 +1,23 @@
 <div class="row">
-  <button mat-mini-fab class="invisible-focus" (click)="refreshForecast()">
-    <mat-icon>refresh</mat-icon>
-  </button>
-  <p *ngIf="forecast">
-    Zuletzt aktualisiert: {{clientFetch | date: 'dd.MM.yyyy HH:mm:ss'}} Uhr<br />
-    Stand der Wetterinfo: {{forecast.fetched | date: 'dd.MM.yyyy HH:mm:ss'}} Uhr
-  </p>
+  <table *ngIf="forecast" width="100%" style="margin-bottom: 1em;">
+    <tr>
+      <td rowspan="2" style="vertical-align: middle; text-align: center;">
+        <mat-icon style="height:80px;width:80px;" [svgIcon]="getCurrentIcon()"></mat-icon>
+      </td>
+      <td width="100%"><span style="font-size:24pt;font-weight:bold">{{currentConditions.temperature | number: '.1-1'}}°C</span></td>
+      <td rowspan="2" style="vertical-align: middle;text-align: center">
+          <button mat-fab class="invisible-focus" (click)="refreshForecast()">
+            <mat-icon>refresh</mat-icon>
+          </button>
+        </td>
+      </tr>
+    <tr>
+      <td style="font-size:7pt;vertical-align: top">
+        Aktuelle Lage: {{currentConditions.fetchDate | date : 'dd.MM.yyyy, HH:mm'}} Uhr <br/>
+        Vorhersage: {{forecast.fetched | date: 'dd.MM.yyyy, HH:mm:ss'}} Uhr
+      </td>
+    </tr>
+  </table>
 </div>
 <div class="row" *ngIf="forecast">
   <app-day-forecast [forecast]="forecast.today" class="col-lg-4 col-md-4 col-sm-4 col-xs-4 forecast"></app-day-forecast>

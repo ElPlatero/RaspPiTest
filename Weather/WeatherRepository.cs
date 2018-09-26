@@ -1,16 +1,20 @@
 ﻿using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Web;
 using System.Xml.Linq;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace RaspPiTest.Weather
 {
-    public class WeatherRepository
+    public partial class WeatherRepository
     {
         private const string WEATHER_API = @"https://kachelmannwetter.com/de/ajax_pub/weathernexthoursdays?city_id=";
         private WeatherFetch _currentFetch = new WeatherFetch { Fetched = DateTime.MinValue };
@@ -21,7 +25,7 @@ namespace RaspPiTest.Weather
             _options = options.Value;
         }
 
-        public async Task<WeatherFetch> FetchWeatherAsync()
+        public async Task<WeatherFetch> FetchForecastAsync()
         {
             if ((DateTime.Now - _currentFetch.Fetched) <= TimeSpan.FromMinutes(_options.RefreshInterval)) return _currentFetch;
             using (var client = new HttpClient())
@@ -54,20 +58,32 @@ namespace RaspPiTest.Weather
             return _currentFetch;
         }
 
-        public async Task<string> FetchCurrentWeatherAsync()
+        public async Task<WeatherConditions> FetchWeatherConditionsAsync()
         {
-            var uri = "";
-            //clientid dj0yJmk9UGF0QnZnTUgxN0o3JmQ9WVdrOVJVb3hORXMwTkdrbWNHbzlNQS0tJnM9Y29uc3VtZXJzZWNyZXQmeD0zYg--
-            //secret ef4bd6eea2fc1bb03569b2b409b5957eb34131e2
-            //app id EJ14K44i
+            var yql = $"select item.condition from weather.forecast where u = 'c' and woeid in (select woeid from geo.places where text = '{_options.CityName}')";
+            var uri = $"https://query.yahooapis.com/v1/public/yql?q={Uri.EscapeDataString(yql)}&format=json";
 
+            JObject jObject;
 
             using (var client = new HttpClient())
             using (var stream = await client.GetStreamAsync(uri))
             using (var reader = new StreamReader(stream))
             {
-                return reader.ReadToEnd();
+                jObject = JObject.Parse(reader.ReadToEnd());
             }
+
+            var condition = jObject["query"]["results"]["channel"]["item"]["condition"];
+            if (condition == null) throw new InvalidOperationException($"unexpected response: {jObject}");
+
+            var dateString = condition["date"].ToString().Replace("CET", "+01:00").Replace("CEST", "+02:00");
+
+            var t = DateTime.ParseExact(dateString, "ddd, dd MMM yyyy HH':'mm tt zzz", CultureInfo.InvariantCulture);
+
+            return new WeatherConditions(
+                condition["code"].Value<int>(), 
+                t, 
+                condition["temp"].Value<float>()
+            );
         }
 
         private WeatherFetch ParseFetch(XDocument xDoc)
@@ -89,13 +105,13 @@ namespace RaspPiTest.Weather
             var result = new DayForecast();
 
             var date = DateTime.Parse(Regex.Replace(element.Elements().First().Elements().First().Value, @".*\n", "").Trim());
-            if(date < DateTime.Now && date.DayOfYear != DateTime.Now.DayOfYear) date = new DateTime(date.Year + 1, date.Month, date.Day);
+            if (date < DateTime.Now && date.DayOfYear != DateTime.Now.DayOfYear) date = new DateTime(date.Year + 1, date.Month, date.Day);
             result.Date = date;
 
             var sunshineInfos = element.Descendants("img").Where(p => p.Parent?.Attribute("title") != null && p.Parent.Attribute("title").Value.Contains(":")).Select(p =>
             {
                 var node = p.Parent.Attribute("title").Value.Split(':');
-                return new {TimeOfDay = node[0], Sunshine = GetSunshine(node[1].Trim())};
+                return new { TimeOfDay = node[0], Sunshine = GetSunshine(node[1].Trim()) };
             }).ToList();
             result.Morning = sunshineInfos.First(p => p.TimeOfDay == "vormittags").Sunshine;
             result.Afternoon = sunshineInfos.First(p => p.TimeOfDay == "nachmittags").Sunshine;
