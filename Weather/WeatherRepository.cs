@@ -77,7 +77,7 @@ namespace RaspPiTest.Weather
 
             var dateString = condition["date"].ToString().Replace("CET", "+01:00").Replace("CEST", "+02:00");
 
-            var t = DateTime.ParseExact(dateString, "ddd, dd MMM yyyy HH':'mm tt zzz", CultureInfo.InvariantCulture);
+            var t = DateTime.ParseExact(dateString, "ddd, dd MMM yyyy hh':'mm tt zzz", CultureInfo.InvariantCulture);
 
             return new WeatherConditions(
                 condition["code"].Value<int>(), 

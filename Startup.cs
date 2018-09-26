@@ -56,7 +56,7 @@ namespace RaspPiTest
             app.UseMvc(routes =>
             {
                 routes.MapRoute("webapi", "{controller}/{action=Index}");
-                routes.MapRoute("ng", "{*url}");
+                routes.MapRoute("ng", "{*url}", new { controller = "Home", action = "Index" });
             });
         }
     }
