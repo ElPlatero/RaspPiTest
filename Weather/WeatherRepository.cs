@@ -21,7 +21,7 @@ namespace RaspPiTest.Weather
             _options = options.Value;
         }
 
-        public async Task<WeatherFetch> FetchWeatherAsync()
+        public async Task<WeatherFetch> FetchForecastAsync()
         {
             if ((DateTime.Now - _currentFetch.Fetched) <= TimeSpan.FromMinutes(_options.RefreshInterval)) return _currentFetch;
             using (var client = new HttpClient())
@@ -54,12 +54,16 @@ namespace RaspPiTest.Weather
             return _currentFetch;
         }
 
-        public async Task<string> FetchCurrentWeatherAsync()
+        public async Task<string> FetchWeatherConditionsAsync()
         {
-            var uri = "";
+            var yql = $"select item.condition from weather.forecast where u = 'c' and woeid = (select woeid from geo.places where text = '{_options.CityName}')";
+
+            var uri = "https://query.yahooapis.com/v1/public/yql?q=select%20item.condition%20from%20weather.forecast%20where%20u%20%3D%20'c'%20AND%20woeid%20in%20(select%20woeid%20from%20geo.places(1)%20where%20text%3D%22Erfurt%2C%20Germany%22)&format=json";
             //clientid dj0yJmk9UGF0QnZnTUgxN0o3JmQ9WVdrOVJVb3hORXMwTkdrbWNHbzlNQS0tJnM9Y29uc3VtZXJzZWNyZXQmeD0zYg--
             //secret ef4bd6eea2fc1bb03569b2b409b5957eb34131e2
             //app id EJ14K44i
+
+
 
 
             using (var client = new HttpClient())
