@@ -3,6 +3,7 @@ import { WeatherService } from '../../shared/services/weather.service';
 import { WeatherForecast } from '../../shared/classes/weather-forecast';
 import { DayForecast } from '../../shared/classes/day-forecast';
 import { WindInformation } from '../../shared/classes/wind-information';
+import { WeatherConditions } from '../../shared/classes/weather-conditions';
 
 @Component({
   selector: 'app-weather',
@@ -11,17 +12,27 @@ import { WindInformation } from '../../shared/classes/wind-information';
 })
 export class WeatherComponent implements OnInit {
   public forecast: WeatherForecast;
-  public clientFetch: Date;
+  public currentConditions: WeatherConditions = new WeatherConditions();
 
-  constructor(private _weatherService: WeatherService) { }
+  constructor(private _weatherService: WeatherService) {
+    this.currentConditions = new WeatherConditions();
+  }
 
   ngOnInit() {
+    this.getCurrentConditions();
     this.refreshForecast();
   }
 
+  public getCurrentConditions() {
+    this._weatherService.getCurrentConditions().then(p => Object.assign(this.currentConditions, p));
+  }
+
   public refreshForecast(): void {
-    this.clientFetch = new Date();
     this._weatherService.getForecast().then(p => this.forecast = p);
+  }
+
+  public getCurrentIcon() {
+    return this._weatherService.getIcon(this.currentConditions.sunshine, false);
   }
 
   public getDay(date: Date) {

@@ -1,8 +1,7 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { DayForecast } from '../../../shared/classes/day-forecast';
-import { DomSanitizer } from '@angular/platform-browser';
-import { MatIconRegistry } from '@angular/material';
 import { WindInformation } from '../../../shared/classes/wind-information';
+import { WeatherService } from '../../../shared/services/weather.service';
 
 @Component({
   selector: 'app-day-forecast',
@@ -12,27 +11,7 @@ import { WindInformation } from '../../../shared/classes/wind-information';
 export class DayForecastComponent implements OnInit {
   @Input() public forecast: DayForecast;
 
-  constructor(iconRegistry: MatIconRegistry, sanitizer: DomSanitizer) {
-    iconRegistry.addSvgIcon('sunshine-night', sanitizer.bypassSecurityTrustResourceUrl('../assets/img/sym_sunshine_night.svg'));
-    iconRegistry.addSvgIcon('sunshine', sanitizer.bypassSecurityTrustResourceUrl('../assets/img/sym_sunshine.svg'));
-    iconRegistry.addSvgIcon('overcast-night', sanitizer.bypassSecurityTrustResourceUrl('../assets/img/sym_overcast_night.svg'));
-    iconRegistry.addSvgIcon('overcast', sanitizer.bypassSecurityTrustResourceUrl('../assets/img/sym_overcast.svg'));
-    iconRegistry.addSvgIcon('cloudy-night', sanitizer.bypassSecurityTrustResourceUrl('../assets/img/sym_cloudy_night.svg'));
-    iconRegistry.addSvgIcon('cloudy', sanitizer.bypassSecurityTrustResourceUrl('../assets/img/sym_cloudy.svg'));
-    iconRegistry.addSvgIcon('partlycloudy-night', sanitizer.bypassSecurityTrustResourceUrl('../assets/img/sym_partlycloudy_night.svg'));
-    iconRegistry.addSvgIcon('partlycloudy', sanitizer.bypassSecurityTrustResourceUrl('../assets/img/sym_partlycloudy.svg'));
-    iconRegistry.addSvgIcon('rain-night', sanitizer.bypassSecurityTrustResourceUrl('../assets/img/sym_rain_night.svg'));
-    iconRegistry.addSvgIcon('rain', sanitizer.bypassSecurityTrustResourceUrl('../assets/img/sym_rain.svg'));
-    iconRegistry.addSvgIcon('thunderstorm-night', sanitizer.bypassSecurityTrustResourceUrl('../assets/img/sym_thunderstorm_night.svg'));
-    iconRegistry.addSvgIcon('thunderstorm', sanitizer.bypassSecurityTrustResourceUrl('../assets/img/sym_thunderstorm.svg'));
-    // API liefert das hier nciht. warten, bis es mal verwendet wird.
-    iconRegistry.addSvgIcon('rainheavy-night', sanitizer.bypassSecurityTrustResourceUrl('../assets/img/sym_rainheavy_night.svg'));
-    iconRegistry.addSvgIcon('rainheavy', sanitizer.bypassSecurityTrustResourceUrl('../assets/img/sym_rainheavy.svg'));
-    iconRegistry.addSvgIcon('showerslight-night', sanitizer.bypassSecurityTrustResourceUrl('../assets/img/sym_showers_night_light.svg'));
-    iconRegistry.addSvgIcon('showerslight', sanitizer.bypassSecurityTrustResourceUrl('../assets/img/sym_showers_light.svg'));
-    iconRegistry.addSvgIcon('showers-night', sanitizer.bypassSecurityTrustResourceUrl('../assets/img/sym_showers_night.svg'));
-    iconRegistry.addSvgIcon('showers', sanitizer.bypassSecurityTrustResourceUrl('../assets/img/sym_showers.svg'));
-   }
+  constructor(private _weatherService: WeatherService) { }
 
   ngOnInit() {
   }
@@ -58,22 +37,6 @@ export class DayForecastComponent implements OnInit {
     return weekdayNames[date.getDay()];
   }
 
-  public getIcon(sunshine: number, isNight: boolean) {
-    let result = '';
-    switch (sunshine) {
-      case 0: result = 'sunshine'; break;
-      case 1: result = 'overcast'; break;
-      case 2: result = 'cloudy'; break;
-      case 3: result = 'partlycloudy'; break;
-      case 4: result = 'rain'; break;
-      case 5: result = 'thunderstorm'; break;
-    }
-    if (isNight) {
-      return result + '-night';
-    }
-    return result;
-  }
-
   public getWindDirection(wind: WindInformation): string {
     switch (wind.direction) {
       case 0: return 'windstill';
@@ -95,5 +58,9 @@ export class DayForecastComponent implements OnInit {
       case 16: return 'rotate(247.5deg)';
     }
     return '';
+  }
+
+  public getIcon(sunshine: number, isNight: boolean) {
+    return this._weatherService.getIcon(sunshine, isNight);
   }
 }
