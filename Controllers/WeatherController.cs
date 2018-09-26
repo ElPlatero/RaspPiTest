@@ -15,6 +15,12 @@ namespace RaspPiTest.Controllers
             _weatherRepository = weatherRepository;
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetWeatherConditions()
+        {
+            return Ok(await _weatherRepository.FetchWeatherConditionsAsync());
+        }
+
         [HttpGet("forecast")]
         public async Task<IActionResult> GetThreeDaysForecast()
         {
