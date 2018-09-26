@@ -39,3 +39,4 @@ dist/
 .Trashes
 ehthumbs.db
 Thumbs.db
+/fritzbox-settings.json

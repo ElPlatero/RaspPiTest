@@ -1,21 +1,24 @@
 ﻿using System;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
-using System.Xml.Linq;
 using System.Xml.Serialization;
+using Microsoft.Extensions.Options;
 using RaspPiTest.FritzBox.Model;
 
 namespace RaspPiTest.FritzBox
 {
     public class FritzBoxClient
     {
-        private const string Username = "pi";
-        private const string Password = "waterrat";
+        private readonly FritzBoxConnection _connection;
+
+        public FritzBoxClient(IOptions<FritzBoxConnection> options)
+        {
+            _connection = options.Value;
+        }
 
         private bool _isRetrying;
         private string _sessionId;
@@ -23,7 +26,7 @@ namespace RaspPiTest.FritzBox
 
         public async Task<T> ReadPageAsync<T>(string url) where T : class
         {
-            if (!IsInitialized) _sessionId = await GetSessionIdAsync(Username, Password);
+            if (!IsInitialized) _sessionId = await GetSessionIdAsync(_connection.Username, _connection.Password);
 
             using (var client = new HttpClient())
             {
@@ -45,9 +48,6 @@ namespace RaspPiTest.FritzBox
                     using (var responseContent = await response.Content.ReadAsStreamAsync())
                     {
                         if(responseContent.Length == 0) return default(T);
-                        XDocument xDoc = XDocument.Load(responseContent);
-                        responseContent.Seek(0, SeekOrigin.Begin);
-
                         var serializer = new XmlSerializer(typeof(T));
                         return (T) serializer.Deserialize(responseContent);
                     }
@@ -70,7 +70,7 @@ namespace RaspPiTest.FritzBox
             }
         }
 
-        private async Task<string> GetSessionIdAsync(string username, string password)
+        private static async Task<string> GetSessionIdAsync(string username, string password)
         {
             using (var client = new HttpClient())
             using (var xmlStream = await client.GetStreamAsync(@"http://fritz.box/login_sid.lua"))
@@ -79,7 +79,7 @@ namespace RaspPiTest.FritzBox
                 var sessionInfo = new SessionInfoResponse();
                 sessionInfo.ReadXml(reader);
                 if (sessionInfo.IsSessionIdSet) return sessionInfo.SessionId;
-                using (var loginStream = await client.GetStreamAsync(@"http://fritz.box/login_sid.lua?username=" + username + "&response=" + SolveChallenge(sessionInfo.Challenge, password)))
+                using (var loginStream = await client.GetStreamAsync($@"http://fritz.box/login_sid.lua?username={username}&response={SolveChallenge(sessionInfo.Challenge, password)}"))
                 using (var loginReader = XmlReader.Create(loginStream))
                 {
                     sessionInfo.ReadXml(loginReader);
