@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RaspPiTest.FritzBox;
+using RaspPiTest.Hue;
 using RaspPiTest.Weather;
 
 namespace RaspPiTest
@@ -27,6 +28,7 @@ namespace RaspPiTest
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
             services.AddSingleton<FritzBoxClient>();
             services.AddSingleton<WeatherRepository>();
+            services.AddSingleton<HueRepository>();
             services.AddCors(o => o.AddPolicy("allowDevAngular", builder =>
             {
                 builder.WithOrigins("http://localhost:4200");
@@ -40,6 +42,7 @@ namespace RaspPiTest
                 .Build();
             services.Configure<WeatherOptions>(configuration.GetSection("weather"));
             services.Configure<FritzBoxConnection>(configuration.GetSection("connection"));
+            services.Configure<HueConfiguration>(configuration.GetSection("hue"));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
