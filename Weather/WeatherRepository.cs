@@ -6,10 +6,8 @@ using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Web;
 using System.Xml.Linq;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace RaspPiTest.Weather
@@ -27,7 +25,7 @@ namespace RaspPiTest.Weather
 
         public async Task<WeatherFetch> FetchForecastAsync()
         {
-            if ((DateTime.Now - _currentFetch.Fetched) <= TimeSpan.FromMinutes(_options.RefreshInterval)) return _currentFetch;
+            if (DateTime.Now - _currentFetch.Fetched <= TimeSpan.FromMinutes(_options.RefreshInterval)) return _currentFetch;
             using (var client = new HttpClient())
             using (var stream = await client.GetStreamAsync($"{WEATHER_API}{_options.CityId}"))
             using (var reader = new StreamReader(stream))
@@ -35,7 +33,7 @@ namespace RaspPiTest.Weather
                 string line;
                 var sb = new StringBuilder("<root>");
                 var beginFound = false;
-                int divCount = 0;
+                var divCount = 0;
 
 
                 while ((line = await reader.ReadLineAsync()) != null)

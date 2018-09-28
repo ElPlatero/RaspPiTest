@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using RaspPiTest.FritzBox;
@@ -47,8 +45,7 @@ namespace RaspPiTest.Controllers
             var parameter = Thermostat.GetFritzboxTemperature(newTemperature);
             var result = await _client.ReadPageAsync<string>($"http://fritz.box/webservices/homeautoswitch.lua?ain={id}&switchcmd=sethkrtsoll&param={parameter}");
 
-            if (!byte.TryParse(result.Trim('\n'), out byte setTemperature)) return Ok(new { success = false});
-            return Ok(new { success = true, result = Thermostat.GetTemperature(setTemperature) });
+            return !byte.TryParse(result.Trim('\n'), out byte setTemperature) ? Ok(new { success = false}) : Ok(new { success = true, result = Thermostat.GetTemperature(setTemperature) });
         }
 
         // DELETE api/values/5
