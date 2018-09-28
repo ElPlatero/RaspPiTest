@@ -37,10 +37,7 @@ namespace RaspPiTest.FritzBox.Model
         public static byte GetFritzboxTemperature(float celsiusTemperature)
         {
             if (celsiusTemperature < 0) return 253;
-            if (Math.Abs(celsiusTemperature) < 0.1) return 254;
-            return Convert.ToByte(2 * celsiusTemperature);
-
-
+            return Math.Abs(celsiusTemperature) < 0.1 ? (byte) 254 : Convert.ToByte(2 * celsiusTemperature);
         }
 
         [JsonProperty("actualTemperature")]  public float ActualTemperature => GetTemperature(ActualTemperatureInternal);

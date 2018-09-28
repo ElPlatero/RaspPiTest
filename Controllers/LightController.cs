@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using HueSharp.Messages.Lights;
+﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using RaspPiTest.Hue;
+using RaspPiTest.Hue.DomainModels;
 
 namespace RaspPiTest.Controllers
 {
@@ -22,28 +19,29 @@ namespace RaspPiTest.Controllers
         [HttpGet]
         public Task<IActionResult> GetAllLights()
         {
-            return Task.FromResult((IActionResult)Ok(_repository.GetLights()));
+            return _repository
+                .GetLightsAsync()
+                .ContinueWith(getLightsTask => (IActionResult) Ok(getLightsTask.Result));
         }
 
         [HttpGet("{lightId}/state")]
         public Task<IActionResult> GetLightState(int lightId)
         {
-            var state = _repository.GetState(lightId);
-            if (state == null) return Task.FromResult((IActionResult)NotFound());
-
-            return Task.FromResult((IActionResult) Ok(state));
-
+            return _repository
+                .GetStateAsync(lightId)
+                .ContinueWith(getStateTask =>
+                {
+                    var state = getStateTask.Result;
+                    return state == null ? (IActionResult) NotFound() : Ok(state);
+                });
         }
 
-        [HttpPost("{lightId}/state")]
+        [HttpPut("{lightId}/state")]
         public Task<IActionResult> SetLightState([FromBody] LightState state, int lightId)
         {
-            if (!_repository.SwitchLightState(lightId, state))
-            {
-                return Task.FromResult((IActionResult) NotFound());
-            }
-
-            return Task.FromResult((IActionResult) Ok());
+            return _repository
+                .SwitchLightStateAsync(lightId, state)
+                .ContinueWith(p => p.Result ? (IActionResult) Ok() : NotFound());
         }
     }
 }

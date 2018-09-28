@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore;
+﻿using System.IO;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace RaspPiTest
 {
@@ -13,10 +14,22 @@ namespace RaspPiTest
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args)
         {
-            var config = new ConfigurationBuilder().AddJsonFile("hosting.json").Build();
-
-            return WebHost.CreateDefaultBuilder(args)
-                .UseConfiguration(config)
+            return new WebHostBuilder()
+                .UseKestrel()
+                .UseContentRoot(Directory.GetCurrentDirectory())
+                .ConfigureAppConfiguration((hostingContext, config) =>
+                {
+                    config
+                        .AddJsonFile("appsettings.json", true, true)
+                        .AddEnvironmentVariables();
+                })
+                .ConfigureLogging((hostingContext, logging) =>
+                {
+                    logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
+                    logging.AddConsole();
+                    logging.AddDebug();
+                })
+                .UseConfiguration(new ConfigurationBuilder().AddJsonFile("hosting.json", true, false).Build())
                 .UseStartup<Startup>();
         }
     }

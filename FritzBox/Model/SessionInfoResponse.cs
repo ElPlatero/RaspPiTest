@@ -23,12 +23,11 @@ namespace RaspPiTest.FritzBox.Model
                 if (reader.Name == "SID") SessionId = reader.ReadElementContentAsString();
                 if (reader.Name == "Challenge") Challenge = reader.ReadElementContentAsString();
                 if (reader.Name == "BlockTime") BlockTime = reader.ReadElementContentAsInt();
-                if (reader.Name == "Name")
-                {
-                    var rightsName = reader.ReadElementContentAsString();
-                    while (reader.Name != "Access") reader.Read();
-                    Rights.Add(new SessionInfoRights { Name = rightsName, Access = (byte)reader.ReadElementContentAsInt()});
-                }
+                if (reader.Name != "Name") continue;
+
+                var rightsName = reader.ReadElementContentAsString();
+                while (reader.Name != "Access") reader.Read();
+                Rights.Add(new SessionInfoRights { Name = rightsName, Access = (byte)reader.ReadElementContentAsInt()});
             }
         }
 

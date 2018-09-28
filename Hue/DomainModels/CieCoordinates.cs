@@ -2,6 +2,7 @@
 {
     public sealed class CieCoordinates
     {
+        public static readonly CieCoordinates Empty = new CieCoordinates(0,0);
         public static readonly CieCoordinates Candle = new CieCoordinates(0.5268, 0.4133); //actual candle is about 500K warmer than this.
         public static readonly CieCoordinates SodiumVaporLamp = new CieCoordinates(0.5268, 0.4133);
         public static readonly CieCoordinates Bulb40W = new CieCoordinates(0.4677, 0.4121);
@@ -37,7 +38,7 @@
         public double Y
         {
             get => _y;
-            set => _y = value < 0 ? 0 : value < 1 ? 1 : value;
+            set => _y = value < 0 ? 0 : value > 1 ? 1 : value;
         }
     }
 

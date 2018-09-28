@@ -1,91 +1,84 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using HueSharp.Messages;
 using HueSharp.Messages.Lights;
+using HueLight = HueSharp.Messages.Lights.Light;
+using HueLightState = HueSharp.Messages.Lights.LightState;
 using HueSharp.Net;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using RaspPiTest.Hue.DomainModels;
+using Light = RaspPiTest.Hue.DomainModels.Light;
+using LightState = RaspPiTest.Hue.DomainModels.LightState;
 
 
 namespace RaspPiTest.Hue
 {
     public class HueRepository
     {
-        private readonly HueConfiguration _options;
-        private ICollection<Light> _knownLights;
+        private ICollection<Light> _knownLights = new Light[0];
         private DateTime _lastFetch;
+        private readonly HueClient _hueClient;
         private ILogger _logger;
-
-        private ICollection<Light> KnownLights
-        {
-            get
-            {
-                Refresh();
-                return _knownLights;
-            }
-        }
+        private readonly TimeSpan _refreshIntervall;
 
         public HueRepository(IOptions<HueConfiguration> options, ILoggerFactory loggerFactory)
         {
-            _options = options.Value;
             _logger = loggerFactory.CreateLogger<HueRepository>();
+            _hueClient = new HueClient(loggerFactory, options.Value.User, options.Value.Address);
+            _refreshIntervall = TimeSpan.FromMinutes(options.Value.RefreshInterval);
         }
 
-        private void Refresh()
+        private Task<T> WrapAsync<T>(Func<ICollection<Light>, T> innerFunction)
         {
-            if (_knownLights != null && DateTime.Now - _lastFetch < TimeSpan.FromMinutes(_options.RefreshInterval)) return;
+            return GetKnownLightsAsync().ContinueWith(getKnownLightsTask =>
+            {
+                var lights = getKnownLightsTask.Result;
+                return innerFunction(lights);
+            });
+        }
 
-            var client = GetClient();
-            var response = client.GetResponse(new GetAllLightsRequest()) as GetAllLightsResponse;
-            if (response == null) return;
+        private async Task<ICollection<Light>> GetKnownLightsAsync()
+        {
+            if (DateTime.Now - _lastFetch < _refreshIntervall) return _knownLights;
+
+            var response = await _hueClient.GetResponseAsync(new GetAllLightsRequest()) as GetAllLightsResponse;
+            if (response == null) return _knownLights;
 
             _lastFetch = DateTime.Now;
-            _knownLights = new HashSet<Light>(response);
+            _knownLights = response.Select(HueExtensions.ToApiType).ToArray();
+            return _knownLights;
         }
 
-        private HueClient GetClient()
+        public Task<Light[]> GetLightsAsync()
         {
-            var result = new HueClient(_options.User, _options.Address);
-            result.Log += (s, e) => _logger.LogDebug(e);
-            return result;
+            return WrapAsync(p => p.ToArray());
         }
 
-        public IEnumerable<Light> GetLights()
+        public Task<LightState> GetStateAsync(int lightId)
         {
-            return KnownLights?? new Light[0];
+            return WrapAsync(lights => lights.SingleOrDefault(p => p.Id == lightId)?.State);
         }
 
-        public LightState GetState(int lightId)
+        public Task<bool> SwitchLightStateAsync(int lightId, LightState newState)
         {
-            var result = KnownLights.SingleOrDefault(p => p.Id == lightId)?.Status;
-            if (result != null)
+            return WrapAsync(lights => 
             {
-                result.IsOn = result.IsOn;
-                result.IsReachable = result.IsReachable;
-                result.Brightness = result.Brightness;
-                result.Hue = result.Hue;
-                result.Saturation = result.Saturation;
-                result.Effect = result.Effect;
-            }
+                var knownLight = lights.SingleOrDefault(p => p.Id == lightId);
+                if (knownLight == null) return false;
 
-            return result;
-        }
+                var request = new SetLightStateRequest(knownLight.Id) {Status = newState.ToHueType()};
+                var response = _hueClient.GetResponseAsync(request).Result;
 
-        public bool SwitchLightState(int lightId, LightState newState)
-        {
-            var knownLight = KnownLights.SingleOrDefault(p => p.Id == lightId);
-            if (knownLight == null) return false;
-
-            var client = GetClient();
-            var request = new SetLightStateRequest(knownLight.Id);
-            if (newState.ShouldSerializeIsOn()) request.Status.IsOn = knownLight.Status.IsOn = newState.IsOn;
-            if (newState.ShouldSerializeBrightness()) request.Status.Brightness = knownLight.Status.Brightness = newState.Brightness;
-            if (newState.ShouldSerializeHue()) request.Status.Hue = knownLight.Status.Hue = newState.Hue;
-            if (newState.ShouldSerializeSaturation()) request.Status.Saturation = knownLight.Status.Saturation = newState.Saturation;
-            if (newState.ShouldSerializeEffect()) request.Status.Effect = knownLight.Status.Effect = newState.Effect;
-            
-            client.GetResponse(request);
-            return true;
+                if (response is SuccessResponse)
+                {
+                    knownLight.State = newState;
+                    return true;
+                }
+                return false;
+            });
         }
     }
 }
