@@ -42,3 +42,6 @@ Thumbs.db
 /fritzbox-settings.json
 /publish.ps1
 /appsettings.owm.json
+/Properties/PublishProfiles/*.pubxml
+/Properties/PublishProfiles/*.user
+/*.user
