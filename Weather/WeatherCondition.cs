@@ -8,7 +8,7 @@ namespace RaspPiTest.Weather
         {
             public WeatherConditions(int code, DateTime fetchDate, float temperature)
             {
-                Sunshine = ConvertYahooConditionCode(code);
+                Sunshine = ConvertOwmConditionCode(code);
                 FetchDate = fetchDate;
                 Temperature = temperature;
             }
@@ -17,14 +17,15 @@ namespace RaspPiTest.Weather
             public DateTime FetchDate { get; }
             public float Temperature { get; }
 
-            private static Sunshine ConvertYahooConditionCode(int yahooConditionCode)
+            private static Sunshine ConvertOwmConditionCode(int yahooConditionCode)
             {
-                if (yahooConditionCode >= 3 && yahooConditionCode <= 4) return Sunshine.Gewitter;
-                if (yahooConditionCode >= 5 && yahooConditionCode <= 18) return Sunshine.Regen;
-                if (yahooConditionCode >= 32 && yahooConditionCode <= 36) return Sunshine.Wolkenlos;
-                if (yahooConditionCode >= 29 && yahooConditionCode <= 30) return Sunshine.LeichtBewoelkt;
-                if (yahooConditionCode >= 27 && yahooConditionCode <= 28) return Sunshine.StarkBewoelkt;
-                return Sunshine.Bedeckt;
+                if (yahooConditionCode >= 200 && yahooConditionCode <= 232) return Sunshine.Gewitter;
+                if (yahooConditionCode >= 300 && yahooConditionCode <= 531) return Sunshine.Regen;
+                if (yahooConditionCode == 800) return Sunshine.Wolkenlos;
+                if (yahooConditionCode >= 801 && yahooConditionCode <= 802) return Sunshine.LeichtBewoelkt;
+                if (yahooConditionCode >= 802 && yahooConditionCode <= 803) return Sunshine.StarkBewoelkt;
+                if (yahooConditionCode == 804) return Sunshine.Bedeckt;
+                return Sunshine.LeichtBewoelkt;
             }
         }
     }

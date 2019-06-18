@@ -25,6 +25,9 @@
     <Content Update="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Update="appsettings.owm.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Update="fritzbox-settings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

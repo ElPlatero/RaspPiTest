@@ -14,12 +14,14 @@ namespace RaspPiTest.Weather
 {
     public partial class WeatherRepository
     {
+        private readonly OpenWeatherMapConfiguration _owmConfiguration;
         private const string WEATHER_API = @"https://kachelmannwetter.com/de/ajax_pub/weathernexthoursdays?city_id=";
         private WeatherFetch _currentFetch = new WeatherFetch { Fetched = DateTime.MinValue };
         private readonly WeatherOptions _options;
 
-        public WeatherRepository(IOptions<WeatherOptions> options)
+        public WeatherRepository(IOptions<WeatherOptions> options, IOptions<OpenWeatherMapConfiguration> owmConfiguration)
         {
+            _owmConfiguration = owmConfiguration.Value;
             _options = options.Value;
         }
 
@@ -58,8 +60,8 @@ namespace RaspPiTest.Weather
 
         public async Task<WeatherConditions> FetchWeatherConditionsAsync()
         {
-            var yql = $"select item.condition from weather.forecast where u = 'c' and woeid in (select woeid from geo.places where text = '{_options.CityName}')";
-            var uri = $"https://query.yahooapis.com/v1/public/yql?q={Uri.EscapeDataString(yql)}&format=json";
+            var ownApiKey = _owmConfiguration.Get(_options.OwmKey);
+            var uri = $"https://api.openweathermap.org/data/2.5/weather?id={_options.CityId}&APPID={ownApiKey}";
 
             JObject jObject;
 
@@ -70,19 +72,14 @@ namespace RaspPiTest.Weather
                 jObject = JObject.Parse(reader.ReadToEnd());
             }
 
-            var condition = jObject["query"]["results"]["channel"]["item"]["condition"];
-            if (condition == null) throw new InvalidOperationException($"unexpected response: {jObject}");
-
-            var dateString = condition["date"].ToString().Replace("CET", "+01:00").Replace("CEST", "+02:00");
-
-            var t = DateTime.ParseExact(dateString, "ddd, dd MMM yyyy hh':'mm tt zzz", CultureInfo.InvariantCulture);
-
             return new WeatherConditions(
-                condition["code"].Value<int>(), 
-                t, 
-                condition["temp"].Value<float>()
+                jObject["weather"][0]["id"].Value<int>(),
+                ToDateTime(jObject["dt"].Value<long>()),
+                jObject["main"]["temp"].Value<float>() - 273.15f
             );
         }
+
+        private static DateTime ToDateTime(long unixTime) => new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc).AddSeconds(unixTime).ToLocalTime();
 
         private WeatherFetch ParseFetch(XDocument xDoc)
         {

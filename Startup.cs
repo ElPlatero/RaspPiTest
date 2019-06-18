@@ -34,8 +34,10 @@ namespace RaspPiTest
 
             var configuration = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json", false)
+                .AddJsonFile("appsettings.owm.json", true)
                 .AddJsonFile("fritzbox-settings.json", true)
                 .Build();
+            services.Configure<OpenWeatherMapConfiguration>(configuration);
             services.Configure<WeatherOptions>(configuration.GetSection("weather"));
             services.Configure<FritzBoxConnection>(configuration.GetSection("connection"));
             services.Configure<HueConfiguration>(configuration.GetSection("hue"));
