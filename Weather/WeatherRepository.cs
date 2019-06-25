@@ -47,7 +47,7 @@ namespace RaspPiTest.Weather
                     if (line.Contains("</div")) divCount--;
 
                     if (divCount < 0) break;
-                    sb.AppendLine(line);
+                    sb.AppendLine(line.Replace("&uuml;", "ü").Replace("&ouml;", "ö").Replace("&auml;", "ä").Replace("&Uuml;", "Ü").Replace("&Ouml;", "Ö").Replace("&Auml;", "Ä"));
                 }
 
                 sb.AppendLine("</root>");
