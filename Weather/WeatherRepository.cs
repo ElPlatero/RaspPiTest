@@ -142,8 +142,8 @@ namespace RaspPiTest.Weather
             result.Direction = GetWindDirection(directionNode.Attribute("class").Value.Split('-').Last());
 
             var nodes = element.Elements().ToArray();
-            result.Speed = float.Parse(nodes[0].Value.Substring(0, nodes[0].Value.Length - 4));
-            result.MaxSpeed = float.Parse(nodes[1].Value.Substring(0, nodes[1].Value.Length - 4));
+            result.Speed = float.TryParse(nodes[0].Value.Substring(0, nodes[0].Value.Length - 4), out var speed) ? speed : 0;
+            result.MaxSpeed = float.TryParse(nodes[1].Value.Substring(0, nodes[1].Value.Length - 4), out var maxSpeed) ? maxSpeed : 0;
             return result;
         }
         private Sunshine GetSunshine(string sunhineDescription)
