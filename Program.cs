@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Serilog;
+using Serilog.Events;
 
 namespace RaspPiTest
 {
@@ -23,11 +25,12 @@ namespace RaspPiTest
                         .AddJsonFile("appsettings.json", true, true)
                         .AddEnvironmentVariables();
                 })
-                .ConfigureLogging((hostingContext, logging) =>
-                {
-                    logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
-                    logging.AddConsole();
-                    logging.AddDebug();
+                .UseSerilog((hostingContext, logging) => {
+                        logging.MinimumLevel.Debug();
+                        logging.MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Information).WriteTo.Console();
+                        logging
+                            .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+                            .WriteTo.File("logs\\sssh..log", rollingInterval: RollingInterval.Day, outputTemplate: "[{Timestamp:HH:mm:ss.fff} {Level:u3}] {Message:lj}{NewLine}{Exception}");
                 })
                 .UseConfiguration(new ConfigurationBuilder().AddJsonFile("hosting.json", true, false).Build())
                 .UseStartup<Startup>();

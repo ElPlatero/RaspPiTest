@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
 
@@ -18,20 +19,29 @@ namespace RaspPiTest.Weather
         private const string WEATHER_API = @"https://kachelmannwetter.com/de/ajax_pub/weathernexthoursdays?city_id=";
         private WeatherFetch _currentFetch = new WeatherFetch { Fetched = DateTime.MinValue };
         private readonly WeatherOptions _options;
+        private readonly ILogger _logger;
 
-        public WeatherRepository(IOptions<WeatherOptions> options, IOptions<OpenWeatherMapConfiguration> owmConfiguration)
+        public WeatherRepository(ILoggerFactory loggerFactory, IOptions<WeatherOptions> options, IOptions<OpenWeatherMapConfiguration> owmConfiguration)
         {
+            _logger = loggerFactory.CreateLogger<WeatherRepository>();
             _owmConfiguration = owmConfiguration.Value;
             _options = options.Value;
         }
 
         public async Task<WeatherFetch> FetchForecastAsync()
         {
-            if (DateTime.Now - _currentFetch.Fetched <= TimeSpan.FromMinutes(_options.RefreshInterval)) return _currentFetch;
+            var url = $"{WEATHER_API}{_options.CityId}";
+            _logger.LogDebug("Wettervorhersage wird geholt...");
+            if (DateTime.Now - _currentFetch.Fetched <= TimeSpan.FromMinutes(_options.RefreshInterval))
+            {
+                _logger.LogDebug("Kein erneutes Laden notwendig, Datensatz ist noch aktuell.");
+                return _currentFetch;
+            }
             using (var client = new HttpClient())
-            using (var stream = await client.GetStreamAsync($"{WEATHER_API}{_options.CityId}"))
+            using (var stream = await client.GetStreamAsync(url))
             using (var reader = new StreamReader(stream))
             {
+                _logger.LogDebug("Lade Wettervorhersage bei {url}", url);
                 string line;
                 var sb = new StringBuilder("<root>");
                 var beginFound = false;
@@ -55,6 +65,7 @@ namespace RaspPiTest.Weather
                 _currentFetch = ParseFetch(xDoc);
             }
 
+            _logger.LogDebug("Datensatz geladen. {@list}", _currentFetch);
             return _currentFetch;
         }
 
@@ -62,6 +73,7 @@ namespace RaspPiTest.Weather
         {
             var ownApiKey = _owmConfiguration.Get(_options.OwmKey);
             var uri = $"https://api.openweathermap.org/data/2.5/weather?id={_options.CityId}&APPID={ownApiKey}";
+            _logger.LogDebug("Lade aktuelle Wetterdaten bei {url}", uri.Substring(0, uri.Length - ownApiKey.Length));
 
             JObject jObject;
 
@@ -72,11 +84,13 @@ namespace RaspPiTest.Weather
                 jObject = JObject.Parse(reader.ReadToEnd());
             }
 
-            return new WeatherConditions(
+            var result = new WeatherConditions(
                 jObject["weather"][0]["id"].Value<int>(),
                 ToDateTime(jObject["dt"].Value<long>()),
                 jObject["main"]["temp"].Value<float>() - 273.15f
             );
+            _logger.LogDebug("Lade aktuelle Wetterdaten geladen: {@result}", result);
+            return result;
         }
 
         private static DateTime ToDateTime(long unixTime) => new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc).AddSeconds(unixTime).ToLocalTime();

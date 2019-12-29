@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using RaspPiTest.Middleware;
+using Microsoft.Extensions.Logging;
 using RaspPiTest.Weather;
 
 namespace RaspPiTest.Controllers
@@ -10,22 +10,30 @@ namespace RaspPiTest.Controllers
     public class WeatherController : ControllerBase
     {
         private readonly WeatherRepository _weatherRepository;
+        private readonly ILogger _logger;
 
-        public WeatherController(WeatherRepository weatherRepository)
+        public WeatherController(ILoggerFactory loggerFactory, WeatherRepository weatherRepository)
         {
+            _logger = loggerFactory.CreateLogger<WeatherController>();
             _weatherRepository = weatherRepository;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetWeatherConditions()
         {
-            return Ok(await _weatherRepository.FetchWeatherConditionsAsync());
+            using (_logger.BeginScope("Get conditions"))
+            {
+                return Ok(await _weatherRepository.FetchWeatherConditionsAsync());
+            }
         }
 
         [HttpGet("forecast")]
         public async Task<IActionResult> GetThreeDaysForecast()
         {
-            return Ok(await _weatherRepository.FetchForecastAsync());
+            using (_logger.BeginScope("Get forecast"))
+            {
+                return Ok(await _weatherRepository.FetchForecastAsync());
+            }
         }
     }
 }
