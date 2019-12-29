@@ -1,8 +1,11 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using RaspPiTest.FritzBox;
 using RaspPiTest.FritzBox.Model;
+using RaspPiTest.Middleware;
 
 namespace RaspPiTest.Controllers
 {
@@ -11,9 +14,11 @@ namespace RaspPiTest.Controllers
     public class DeviceController : ControllerBase
     {
         private readonly FritzBoxClient _client;
+        private readonly ILogger _logger;
 
-        public DeviceController(FritzBoxClient client)
+        public DeviceController(ILoggerFactory loggerFactory, FritzBoxClient client)
         {
+            _logger = loggerFactory.CreateLogger<DeviceController>();
             _client = client;
         }
 
@@ -21,37 +26,34 @@ namespace RaspPiTest.Controllers
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            var result = await _client.ReadPageAsync<DeviceList>("http://fritz.box/webservices/homeautoswitch.lua?switchcmd=getdevicelistinfos");
-            if (result == null || !result.Devices.Any()) return NotFound(new { Message = "Fehlerhaft eingelesen, oder keine Geräte verfügbar."});
+            using (_logger.BeginScope("Get Devices"))
+            {
+                _logger.LogDebug("Ermittlung Geräteliste...");
+                var result = await _client.ReadPageAsync<DeviceList>("http://fritz.box/webservices/homeautoswitch.lua?switchcmd=getdevicelistinfos");
+                if (result == null || !result.Devices.Any())
+                {
+                    throw new ApiException(StatusCodes.Status404NotFound, "Fehlerhaft eingelesen, oder keine Geräte verfügbar.");
+                }
 
-            return Ok(new { result.Devices});
-        }
-
-        // GET api/values/5
-        [HttpGet("{id}")]
-        public ActionResult<string> Get(int id)
-        {
-            return "value";
-        }
-
-        [HttpPost]
-        public void Post([FromBody] string value)
-        {
+                _logger.LogInformation("Geräteliste erfolgreich abgerufen: {@list}",  result.Devices.Select(p => new {p.Id, p.Name}));
+                return Ok(new {result.Devices});
+            }
         }
 
         [HttpPut("{id}/status")]
         public async Task<IActionResult> Put(string id, [FromBody] float newTemperature)
         {
-            var parameter = Thermostat.GetFritzboxTemperature(newTemperature);
-            var result = await _client.ReadPageAsync<string>($"http://fritz.box/webservices/homeautoswitch.lua?ain={id}&switchcmd=sethkrtsoll&param={parameter}");
+            using (_logger.BeginScope("Update Device"))
+            {
+                _logger.LogDebug("Aktualisiere Gerät {id}...", id);
 
-            return !byte.TryParse(result.Trim('\n'), out byte setTemperature) ? Ok(new { success = false}) : Ok(new { success = true, result = Thermostat.GetTemperature(setTemperature) });
-        }
+                var parameter = Thermostat.GetFritzboxTemperature(newTemperature);
+                var result = await _client.ReadPageAsync<string>($"http://fritz.box/webservices/homeautoswitch.lua?ain={id}&switchcmd=sethkrtsoll&param={parameter}");
 
-        // DELETE api/values/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
+                return !byte.TryParse(result.Trim('\n'), out byte setTemperature)
+                    ? Ok(new {success = false})
+                    : Ok(new {success = true, result = Thermostat.GetTemperature(setTemperature)});
+            }
         }
     }
 }

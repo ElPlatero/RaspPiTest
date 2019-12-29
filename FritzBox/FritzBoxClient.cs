@@ -6,6 +6,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
+using Microsoft.AspNetCore.Identity.UI.V3.Pages.Internal.Account;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RaspPiTest.FritzBox.Model;
 
@@ -15,18 +17,21 @@ namespace RaspPiTest.FritzBox
     {
         private readonly FritzBoxConnection _connection;
 
-        public FritzBoxClient(IOptions<FritzBoxConnection> options)
+        public FritzBoxClient(ILoggerFactory loggerFactory, IOptions<FritzBoxConnection> options)
         {
+            _logger = loggerFactory.CreateLogger<FritzBoxClient>();
             _connection = options.Value;
         }
 
         private bool _isRetrying;
         private string _sessionId;
+        private readonly ILogger _logger;
         private bool IsInitialized => !string.IsNullOrEmpty(_sessionId);
 
         public async Task<T> ReadPageAsync<T>(string url) where T : class
         {
-            if (!IsInitialized) _sessionId = await GetSessionIdAsync(_connection.Username, _connection.Password);
+            _logger.LogDebug("reading Fritz!Box-Page at {url}, expecting {type}", url, typeof(T).Name);
+            if (!IsInitialized) _sessionId = await GetSessionIdAsync(_logger, _connection.Username, _connection.Password);
 
             using (var client = new HttpClient())
             {
@@ -52,8 +57,9 @@ namespace RaspPiTest.FritzBox
                         return (T) serializer.Deserialize(responseContent);
                     }
                 }
-                catch (InvalidOperationException)
+                catch (InvalidOperationException ex)
                 {
+                    _logger.LogError(ex, "Fehler beim Auslesen der Antwort der Fritz!Box.");
                     throw;
                 }
                 catch
@@ -70,8 +76,9 @@ namespace RaspPiTest.FritzBox
             }
         }
 
-        private static async Task<string> GetSessionIdAsync(string username, string password)
+        private static async Task<string> GetSessionIdAsync(ILogger logger, string username, string password)
         {
+            logger.LogDebug("Versuche Anmeldung an Fritz!Box...");
             using (var client = new HttpClient())
             using (var xmlStream = await client.GetStreamAsync(@"http://fritz.box/login_sid.lua"))
             using (var reader = XmlReader.Create(xmlStream))
@@ -83,6 +90,7 @@ namespace RaspPiTest.FritzBox
                 using (var loginReader = XmlReader.Create(loginStream))
                 {
                     sessionInfo.ReadXml(loginReader);
+                    logger.LogDebug("Anmeldung erfolgreich. ({@session})", sessionInfo);
                     return sessionInfo.SessionId;
                 }
             }
