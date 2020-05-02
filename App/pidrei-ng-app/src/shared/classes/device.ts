@@ -17,9 +17,7 @@ export class Device {
     public assign(other: Device): Device {
         this.ain = other.ain;
         this.name = other.name;
-        this.deviceTemperature = this.deviceTemperature || new DeviceTemperature();
-        this.deviceTemperature.temperature = other.deviceTemperature.temperature;
-        this.deviceTemperature.offset = other.deviceTemperature.offset;
+        this.deviceTemperature = new DeviceTemperature(other.deviceTemperature);
         this.thermostat.assign(other.thermostat);
         this.manufacturer = other.manufacturer;
         this.productName = other.productName;

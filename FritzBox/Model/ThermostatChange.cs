@@ -18,6 +18,6 @@ namespace RaspPiTest.FritzBox.Model
             : new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(EndperiodInternal);
 
         [JsonProperty("newTemperature")]
-        public float NewTemperatur => TchangeInternal == 0 || TchangeInternal == 255 ? 0f : TchangeInternal / 2.0f;
+        public float NewTemperatur => TchangeInternal == 0 || TchangeInternal >= 253 ? 0f : TchangeInternal / 2.0f;
     }
 }
