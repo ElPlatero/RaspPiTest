@@ -17,7 +17,7 @@ namespace RaspPiTest
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
+            services.AddControllers().AddNewtonsoftJson();
             services.AddSingleton<FritzBoxClient>();
             services.AddSingleton<WeatherRepository>();
             services.AddSingleton<HueRepository>();
@@ -30,8 +30,8 @@ namespace RaspPiTest
 
             var configuration = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json", false)
-                .AddJsonFile("appsettings.owm.json", true)
-                .AddJsonFile("fritzbox-settings.json", true)
+                .AddJsonFile("appsettings.owm.json", false)
+                .AddJsonFile("fritzbox-settings.json", false)
                 .Build();
             services.Configure<OpenWeatherMapConfiguration>(configuration);
             services.Configure<WeatherOptions>(configuration.GetSection("weather"));
