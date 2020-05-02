@@ -12,17 +12,12 @@ namespace RaspPiTest
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
-        {
-            Configuration = configuration;
-        }
-
-        public IConfiguration Configuration { get; }
+        public Startup(IConfiguration configuration) { }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
             services.AddSingleton<FritzBoxClient>();
             services.AddSingleton<WeatherRepository>();
             services.AddSingleton<HueRepository>();
@@ -45,16 +40,17 @@ namespace RaspPiTest
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             app.UseMiddleware<ErrorMiddleware>();
             app.UseCors("allowDevAngular");
             app.UseDefaultFiles();
             app.UseStaticFiles();
-            app.UseMvc(routes =>
+            app.UseRouting();
+            app.UseEndpoints(routes =>
             {
-                routes.MapRoute("webapi", "{controller}/{action=Index}");
-                routes.MapRoute("ng", "{*url}", new { controller = "Home", action = "Index" });
+                routes.MapControllerRoute("webapi", "{controller}/{action=Index}");
+                routes.MapControllerRoute("ng", "{*url}", new { controller = "Home", action = "Index" });
             });
         }
     }

@@ -15,6 +15,7 @@ publish/
 dist/
 .vs
 .vscode/
+.idea/
 *.7z
 *.dmg
 *.gz
