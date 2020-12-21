@@ -3,7 +3,7 @@ import { OnInit } from '@angular/core';
 import { Device } from 'src/shared/classes/device';
 import { AppPage } from './app-page';
 import { Router, NavigationEnd } from '@angular/router';
-import { MatIconRegistry } from '@angular/material';
+import { MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
 
 @Component({
