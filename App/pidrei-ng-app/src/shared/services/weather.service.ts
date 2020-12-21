@@ -5,7 +5,7 @@ import { WeatherForecast } from '../classes/weather-forecast';
 import { map } from 'rxjs/operators';
 import { WeatherConditions } from '../classes/weather-conditions';
 import { DomSanitizer } from '@angular/platform-browser';
-import { MatIconRegistry } from '@angular/material';
+import { MatIconRegistry } from '@angular/material/icon';
 
 @Injectable({
   providedIn: 'root'

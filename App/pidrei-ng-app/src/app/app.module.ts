@@ -9,16 +9,14 @@ import { HttpClientModule } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { FritzDevicesComponent} from './fritz-devices/fritz-devices.component';
 import { ThermostatComponent } from './thermostat/thermostat.component';
-import {
-  MatButtonModule,
-  MatCardModule,
-  MatIconModule,
-  MatMenuModule,
-  MatSlideToggleModule,
-  MatToolbarModule,
-  MatListModule,
-  MatSidenavModule
-} from '@angular/material';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule} from '@angular/material/menu';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatListModule } from '@angular/material/list';
+import { MatSidenavModule} from '@angular/material/sidenav';
 import { PlusMinusComponent } from './plus-minus/plus-minus.component';
 import { AppRoutingModule, routes } from './app-routing.module';
 import { RouterModule } from '@angular/router';
@@ -32,7 +30,7 @@ import { DayForecastComponent } from './weather/day-forecast/day-forecast.compon
   ],
 
   imports: [
-    RouterModule.forRoot(routes),
+    RouterModule.forRoot(routes, { relativeLinkResolution: 'legacy' }),
     BrowserModule, BrowserAnimationsModule, HttpClientModule, FormsModule, MatSlideToggleModule, MatCardModule, MatButtonModule,
     MatMenuModule, MatIconModule, MatToolbarModule, MatListModule, MatSidenavModule, AppRoutingModule
   ],

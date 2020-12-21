@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { PlusMinusComponent } from './plus-minus.component';
 
@@ -6,7 +6,7 @@ describe('PlusMinusComponent', () => {
   let component: PlusMinusComponent;
   let fixture: ComponentFixture<PlusMinusComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [ PlusMinusComponent ]
     })
