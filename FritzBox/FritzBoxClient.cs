@@ -32,46 +32,44 @@ namespace RaspPiTest.FritzBox
             _logger.LogDebug("reading Fritz!Box-Page at {url}, expecting {type}", url, typeof(T).Name);
             if (!IsInitialized) _sessionId = await GetSessionIdAsync(_logger, _connection.Username, _connection.Password);
 
-            using (var client = new HttpClient())
+            using var client = new HttpClient();
+            
+            url = url.Contains("?") ? 
+                $"{url}&sid={_sessionId}" : 
+                $"{url}?sid={_sessionId}";
+
+            var response = await client.GetAsync(new Uri(url));
+            try
             {
-                url = url.Contains("?") ? 
-                    $"{url}&sid={_sessionId}" : 
-                    $"{url}?sid={_sessionId}";
+                response.EnsureSuccessStatusCode();
 
-                var response = await client.GetAsync(new Uri(url));
-                try
+                if (typeof(T) == typeof(string))
                 {
-                    response.EnsureSuccessStatusCode();
-
-                    if (typeof(T) == typeof(string))
-                    {
-                        var result = await response.Content.ReadAsStringAsync();
-                        return result as T;
-                    }
-
-                    using (var responseContent = await response.Content.ReadAsStreamAsync())
-                    {
-                        if(responseContent.Length == 0) return default(T);
-                        var serializer = new XmlSerializer(typeof(T));
-                        return (T) serializer.Deserialize(responseContent);
-                    }
+                    var result = await response.Content.ReadAsStringAsync();
+                    return result as T;
                 }
-                catch (InvalidOperationException ex)
+
+                await using var responseContent = await response.Content.ReadAsStreamAsync();
+                    
+                if(responseContent.Length == 0) return default(T);
+                var serializer = new XmlSerializer(typeof(T));
+                return (T) serializer.Deserialize(responseContent);
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogError(ex, "Fehler beim Auslesen der Antwort der Fritz!Box.");
+                throw;
+            }
+            catch
+            {
+                if (_isRetrying)
                 {
-                    _logger.LogError(ex, "Fehler beim Auslesen der Antwort der Fritz!Box.");
+                    _isRetrying = false;
                     throw;
                 }
-                catch
-                {
-                    if (_isRetrying)
-                    {
-                        _isRetrying = false;
-                        throw;
-                    }
-                    _isRetrying = true;
-                    _sessionId = string.Empty;
-                    return await ReadPageAsync<T>(url);
-                }
+                _isRetrying = true;
+                _sessionId = string.Empty;
+                return await ReadPageAsync<T>(url);
             }
         }
 

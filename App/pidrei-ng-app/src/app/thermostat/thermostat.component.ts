@@ -51,8 +51,8 @@ export class ThermostatComponent implements OnInit {
     return 'AUS';
   }
 
-  getFoo() {
-    return this.device.thermostat.nextChange.newTemperature === 0 ? 'AUS' : formatNumber(this.device.thermostat.nominalTemperature, 'en-EN', '2.1-2') + '°C';
+  getNextScheduledTemperatureChange() {
+    return this.device.thermostat.nextChange.newTemperature === 0 ? 'AUS' : formatNumber(this.device.thermostat.nextChange.newTemperature, 'en-EN', '2.1-2') + '°C';
   }
 
   onButtonChanged(newStatus: boolean): void {

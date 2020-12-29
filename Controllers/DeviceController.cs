@@ -22,7 +22,6 @@ namespace RaspPiTest.Controllers
             _client = client;
         }
 
-        // GET api/values
         [HttpGet]
         public async Task<IActionResult> Get()
         {

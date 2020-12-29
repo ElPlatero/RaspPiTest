@@ -1,4 +1,4 @@
 export class ThermostatChange {
     public changeTime: Date;
-    public newTemperature: Number;
+    public newTemperature: number;
 }
