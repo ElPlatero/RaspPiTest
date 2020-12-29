@@ -1,31 +1,32 @@
 <mat-card [style.background-color]="getStatus() ? '#ffefea' : '#eaefff'" style="height:200px;min-width:200px;margin-bottom:0.5em;">
   <table class="col-lg-12 col-md-12 col-sm-12 col-xs-12" height="100%">
     <thead>
-      <tr><td colspan="2"><strong>{{device.name}}</strong></td></tr>
+      <colgroup>
+        <col width="50%">
+        <col width="50%">
+      </colgroup>
+      <tr><td colspan="2">
+        <mat-slide-toggle (change)="onButtonChanged($event)" [checked]="getStatus()"></mat-slide-toggle>&nbsp;
+        <strong>{{device.name}}</strong></td></tr>
     </thead>
     <tbody>
       <tr>
-        <td width="50%" class="align-middle" style="text-align:center;">
-          <mat-slide-toggle (change)="onButtonChanged($event)" [checked]="getStatus()">        
-          </mat-slide-toggle>
-        </td>
-        <td rowspan="2">
-          <div class="align-content-center" style="font-weight:bold;font-size:150%;text-align: center;">{{device.thermostat.actualTemperature | number:'2.1-2'}}°C</div>
+        <td colspan="2">
+          <div class="align-content-center" style="font-weight:bold;font-size:200%;text-align: center;">{{device.thermostat.actualTemperature | number:'2.1-2'}}°C</div>
         </td>
       </tr>
       <tr>
-        <td style="font-size: 75%;" class="align-middle center" rowspan="2">
-          {{device.thermostat.nextChange.changeTime | date: 'dd.MM.yyyy HH:mm'}} Uhr<br />
-          {{getFoo() }}
+        <td style="font-size: 75%; text-align: center;" class="align-middle center" width="50%">
+          {{device.thermostat.nextChange.changeTime | date: 'dd.MM.yyyy HH:mm'}} Uhr:<br />
+          {{getNextScheduledTemperatureChange() }}
         </td>
-      </tr>
-      <tr>
-        <td style="text-align:center;">
+        <td style="text-align:center;" width="50%">
           <div *ngIf="getStatus()" style="font-size:75%;text-align:center;">Soll: {{getNominalTemperatureText()}}</div>
           <div *ngIf="!getStatus()" style="font-size:75%;text-align:center;">&nbsp;</div>
           <app-plus-minus *ngIf="getStatus()" [(temperature)]="nominalTemperature"></app-plus-minus>
           <div *ngIf="!getStatus()" style="height:30px;">&nbsp;</div>
         </td>
+
       </tr>
     </tbody>
   </table>
