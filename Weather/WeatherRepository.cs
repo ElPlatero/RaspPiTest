@@ -131,13 +131,13 @@ namespace RaspPiTest.Weather
                 .First(p =>
                     p.Attribute("class") != null &&
                     p.Attribute("class").Value == "day-fc-temp" &&
-                    p.ElementsAfterSelf().First().Value == "min").Value.TrimEnd('°'));
+                    p.ElementsAfterSelf().First().Value == "min").Value.TrimEnd('C').TrimEnd('°'));
             result.MaxTemperature = float.Parse(element
                 .Descendants("div")
                 .First(p =>
                     p.Attribute("class") != null &&
                     p.Attribute("class").Value == "day-fc-temp" &&
-                    p.ElementsAfterSelf().First().Value == "max").Value.TrimEnd('°'));
+                    p.ElementsAfterSelf().First().Value == "max").Value.TrimEnd('C').TrimEnd('°'));
 
             result.ExpectedRain = float.Parse(element.Descendants("span")
                 .First(p => p.Attribute("class") != null && p.Attribute("class").Value.Contains("wi-umbrella")).Parent.Value
